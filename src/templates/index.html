@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestión de Tareas</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <h1>Gestor de Tareas</h1>
+
+  <form id="formTarea">
+    <input type="number" id="id" placeholder="ID (para editar — deja vacío para crear)" >
+    <input type="text" id="titulo" placeholder="Título de la tarea" required>
+    <label>
+      <input type="checkbox" id="completado"> Completada
+    </label>
+    <button type="submit" id="btn-submit">Guardar</button>
+  </form>
+
+  <div id="mensaje"></div>
+
+  <h2>Tareas registradas</h2>
+  <ul id="listaTareas"></ul>
+
+  <script>
+    // 1) Apunta siempre a /tareas (sin slash final)
+    const apiUrl = '/tareas';
+    const form = document.getElementById('formTarea');
+    const lista = document.getElementById('listaTareas');
+    const mensaje = document.getElementById('mensaje');
+    const btn = document.getElementById('btn-submit');
+
+    let editMode = false, editId = null;
+
+    // 2) Cada vez que cargue la página, intenta listar
+    window.addEventListener('DOMContentLoaded', obtenerTareas);
+
+    function obtenerTareas() {
+      console.clear();
+      console.log('⏳ Trayendo tareas…');
+      fetch(apiUrl)
+        .then(res => {
+          console.log('GET /tareas status:', res.status);
+          return res.json();
+        })
+        .then(data => {
+          console.log('GET /tareas data:', data);
+          lista.innerHTML = '';
+          if (!Array.isArray(data.tareas)) {
+            mensaje.textContent = 'Respuesta inesperada: ' + JSON.stringify(data);
+            return;
+          }
+          data.tareas.forEach(t => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+              <strong>[${t.id}]</strong> ${t.titulo} - ${t.completado ? '✅' : '❌'}
+              <button onclick="prepararEdicion(${t.id})">Editar</button>
+              <button onclick="eliminarTarea(${t.id})">Eliminar</button>
+            `;
+            lista.appendChild(li);
+          });
+        })
+        .catch(err => {
+          console.error('Error listando:', err);
+          mensaje.textContent = 'Error al cargar tareas';
+        });
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const idVal = document.getElementById('id').value;
+      const payload = {
+        titulo: document.getElementById('titulo').value,
+        completado: document.getElementById('completado').checked
+      };
+      let method = 'POST', url = apiUrl;
+      if (idVal) {
+        // estás en modo edición
+        method = 'PUT';
+        url = `${apiUrl}/${idVal}`;
+      } else {
+        // creación: debes mandar también el id si tu API lo requiere,
+        // o dejar que MySQL lo genere (mejor opción)
+        payload.id = null;  
+      }
+      console.log(`${method} ${url}`, payload);
+      fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(data => {
+        console.log(`${method} respuesta:`, data);
+        mensaje.textContent = data.mensaje;
+        resetForm();
+        obtenerTareas();
+      })
+      .catch(err => {
+        console.error(`${method} error:`, err);
+        mensaje.textContent = 'Error al ' + (method==='POST' ? 'crear' : 'actualizar') + ' tarea';
+      });
+    });
+
+    function prepararEdicion(id) {
+      console.log('Preparando edición de', id);
+      fetch(`${apiUrl}/${id}`)
+        .then(res => res.json())
+        .then(data => {
+          console.log('GET /tareas/'+id+' data:', data);
+          const t = data.tareas || data.tarea;
+          document.getElementById('id').value = t.id;
+          document.getElementById('titulo').value = t.titulo;
+          document.getElementById('completado').checked = t.completado;
+          editMode = true; editId = t.id;
+          btn.textContent = 'Actualizar';
+        })
+        .catch(err => {
+          console.error('Error cargando tarea para editar:', err);
+          mensaje.textContent = 'Error al cargar tarea';
+        });
+    }
+
+    function eliminarTarea(id) {
+      console.log('DELETE /tareas/'+id);
+      fetch(`${apiUrl}/${id}`, { method: 'DELETE' })
+        .then(res => res.json())
+        .then(data => {
+          console.log('DELETE respuesta:', data);
+          mensaje.textContent = data.mensaje;
+          if (editMode && editId == id) resetForm();
+          obtenerTareas();
+        })
+        .catch(err => {
+          console.error('Error eliminando:', err);
+          mensaje.textContent = 'Error al eliminar';
+        });
+    }
+
+    function resetForm() {
+      form.reset();
+      editMode = false; editId = null;
+      btn.textContent = 'Guardar';
+    }
+  </script>
+</body>
+</html>
