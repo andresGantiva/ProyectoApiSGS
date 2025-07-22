@@ -6,7 +6,19 @@ from config import config
 
 app = Flask(__name__)
 
+#Descomentar si se tiene configurado un puerto para la BD distinto a la predeterminada,
+#o ajustar de acuerdo a la configuracion de su BD
+
+#app.config['MYSQL_HOST'] = 'localhost'
+#app.config['MYSQL_PORT'] = 3308         
+#app.config['MYSQL_PASSWORD'] = 'usbw'       
+#app.config['MYSQL_DB'] = 'trabajadores_tareas'
+
 conexion= MySQL(app)
+
+
+
+
 
 #conexion index HTML
 @app.route('/')
@@ -29,6 +41,7 @@ def listar_tareas():
            tareas.append(tarea)
        return jsonify({'tareas':tareas, 'mensaje':"tareas listadas."})
     except Exception as ex:
+        print("Error en obtener_tareas:", ex)
         return jsonify({'mensaje':"Error"})
 
 
