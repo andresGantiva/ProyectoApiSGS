@@ -27,6 +27,10 @@ SET time_zone = "+00:00";
 -- Estructura de tabla para la tabla `trabajadores_tareas`
 --
 
+CREATE DATABASE IF NOT EXISTS bd_trabajadores_jyb;
+USE bd_trabajadores_jyb;
+
+
 CREATE TABLE `trabajadores_tareas` (
   `id` int(11) NOT NULL,
   `titulo` varchar(25) NOT NULL,
