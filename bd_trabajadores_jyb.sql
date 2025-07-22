@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 21-07-2025 a las 00:30:10
+-- Tiempo de generación: 22-07-2025 a las 16:17:56
 -- Versión del servidor: 5.7.36
 -- Versión de PHP: 8.1.3
 
@@ -38,7 +38,7 @@ CREATE TABLE `trabajadores_tareas` (
 --
 
 INSERT INTO `trabajadores_tareas` (`id`, `titulo`, `completado`) VALUES
-(1, 'Entregar informe', 1),
+(1, 'Entregar informe', 0),
 (13, 'Registrar horas', 0),
 (10000, 'Entregar informe', 1),
 (10002, 'Registrar nuevo cliente', 1),
